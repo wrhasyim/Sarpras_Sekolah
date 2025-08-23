@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SarprasController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\KelasController;
 // Tambahkan controller lain jika ada (UserController, LaporanController, etc)
 
 // Halaman Awal & Login
@@ -19,7 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Sarpras (bisa diakses oleh semua role dengan batasan di controller)
-    Route::resource('sarpras', SarprasController::class)->parameters([
+   Route::resource('sarpras', SarprasController::class)->except(['show'])->parameters([
     'sarpras' => 'sarpras'
 ]);
 
@@ -30,10 +31,20 @@ Route::middleware(['auth'])->group(function () {
         // Route::get('/laporan', [LaporanController::class, 'index']);
     });
 
+// Rute khusus Wali Kelas <-- TAMBAHKAN GRUP BARU INI
+    Route::middleware(['role:wali_kelas'])->group(function() {
+        Route::get('/sarpras-kelas/edit', [SarprasController::class, 'showBulkEditForm'])->name('sarpras.bulk.edit');
+        Route::post('/sarpras-kelas/update', [SarprasController::class, 'bulkUpdate'])->name('sarpras.bulk.update');
+    });
+
 	// Rute untuk Admin dan TU <-- TAMBAHKAN GRUP BARU INI
     Route::middleware(['role:admin,tu'])->group(function() {
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
         Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
+	Route::resource('kelas', KelasController::class);
+Route::get('sarpras/import', [SarprasController::class, 'showImportForm'])->name('sarpras.import.form');
+    Route::post('sarpras/import', [SarprasController::class, 'import'])->name('sarpras.import');
+    Route::get('sarpras/export', [SarprasController::class, 'export'])->name('sarpras.export');
     });
 });

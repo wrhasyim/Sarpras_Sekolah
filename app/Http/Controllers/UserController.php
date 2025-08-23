@@ -24,7 +24,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        $kelas = Kelas::all();
+        // Perubahan di baris ini
+        $kelas = Kelas::where('nama_kelas', 'like', 'Kelas%')->get();
         return view('users.create', compact('kelas'));
     }
 
@@ -57,7 +58,8 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $kelas = Kelas::all();
+        // Perubahan di baris ini
+        $kelas = Kelas::where('nama_kelas', 'like', 'Kelas%')->get();
         return view('users.edit', compact('user', 'kelas'));
     }
 

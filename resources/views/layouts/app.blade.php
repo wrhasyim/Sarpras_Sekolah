@@ -34,8 +34,13 @@
                 </li>
                 @endif
 
-                {{-- Menu untuk Admin dan TU --}}
+                 {{-- Menu untuk Admin dan TU --}}
                 @if(in_array(Auth::user()->role, ['admin', 'tu']))
+                <li>
+                    <a href="{{ route('kelas.index') }}" class="nav-link text-white {{ request()->is('kelas*') ? 'active' : '' }}">
+                        <i class="bi bi-geo-alt"></i> Manajemen Lokasi
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('laporan.index') }}" class="nav-link text-white {{ request()->is('laporan*') ? 'active' : '' }}">
                         <i class="bi bi-file-earmark-text"></i> Laporan

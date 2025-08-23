@@ -7,6 +7,9 @@ use App\Models\Kelas;
 use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Imports\SarprasImport;
+use App\Exports\SarprasExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SarprasController extends Controller
 {
@@ -15,15 +18,13 @@ class SarprasController extends Controller
         $user = Auth::user();
         $query = Sarpras::with('kelas');
 
-        // Filter untuk Wali Kelas
         if ($user->role == 'wali_kelas') {
             $query->where('kelas_id', $user->kelas_id);
         }
 
-        // Filter berdasarkan pencarian
         if ($request->has('search')) {
             $query->where('nama_barang', 'like', '%' . $request->search . '%')
-                  ->orWhere('kode_barang', 'like', '%' . $request->search . '%');
+                ->orWhere('kode_barang', 'like', '%' . $request->search . '%');
         }
 
         $sarpras = $query->paginate(10);
@@ -55,11 +56,11 @@ class SarprasController extends Controller
     public function edit(Sarpras $sarpras)
     {
         $user = Auth::user();
-        // Otorisasi: Wali kelas hanya bisa edit data kelasnya
-        if ($user->role == 'wali_kelas' && $sarpras->kelas_id != $user->kelas_id) {
-            abort(403, 'AKSES DITOLAK');
+        // Blokir Wali Kelas dari halaman edit individual
+        if ($user->role == 'wali_kelas') {
+            abort(403, 'AKSES DITOLAK. Gunakan halaman Edit Inventaris Kelas.');
         }
-        
+
         $kelas = Kelas::all();
         return view('sarpras.edit', compact('sarpras', 'kelas'));
     }
@@ -67,8 +68,9 @@ class SarprasController extends Controller
     public function update(Request $request, Sarpras $sarpras)
     {
         $user = Auth::user();
-        if ($user->role == 'wali_kelas' && $sarpras->kelas_id != $user->kelas_id) {
-            abort(403);
+        // Blokir Wali Kelas dari proses update individual
+        if ($user->role == 'wali_kelas') {
+            abort(403, 'AKSES DITOLAK.');
         }
 
         $request->validate([
@@ -77,7 +79,7 @@ class SarprasController extends Controller
             'kondisi' => 'required',
             'kelas_id' => 'required',
         ]);
-        
+
         $sarpras->update($request->all());
         Log::create(['user_id' => Auth::id(), 'aktivitas' => 'Mengubah data barang: ' . $sarpras->nama_barang]);
 
@@ -86,14 +88,45 @@ class SarprasController extends Controller
 
     public function destroy(Sarpras $sarpras)
     {
-        // Hanya Admin yang bisa hapus
         if (Auth::user()->role != 'admin') {
             abort(403);
         }
-        
+
         Log::create(['user_id' => Auth::id(), 'aktivitas' => 'Menghapus barang: ' . $sarpras->nama_barang]);
         $sarpras->delete();
 
         return redirect()->route('sarpras.index')->with('success', 'Data berhasil dihapus.');
     }
-}
+
+    public function showImportForm()
+    {
+        return view('sarpras.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+        try {
+            Excel::import(new SarprasImport, $request->file('file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengimpor data: ' . $e->getMessage());
+        }
+        return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil diimpor.');
+    }
+
+    public function export()
+    {
+        return Excel::download(new SarprasExport, 'data-sarpras.xlsx');
+    }
+
+    /**
+     * Menampilkan form edit massal untuk Wali Kelas.
+     */
+    public function showBulkEditForm()
+    {
+        $user = Auth::user();
+        $sarpras = Sarpras::where('kelas_id', $user->kelas_id)->get();
+        return view('sarpras.bulk_edit', compact('sarpras'));
+    }
+
+  }
