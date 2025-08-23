@@ -27,7 +27,9 @@
                 </li>
                 @if(Auth::user()->role == 'admin')
                 <li>
-                    <a href="#" class="nav-link text-white"> <i class="bi bi-people"></i> Manajemen User </a>
+                    <a href="{{ route('users.index') }}" class="nav-link text-white {{ request()->is('users*') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i> Manajemen User
+                    </a>
                 </li>
                 <li>
                     <a href="#" class="nav-link text-white"> <i class="bi bi-file-earmark-text"></i> Laporan </a>

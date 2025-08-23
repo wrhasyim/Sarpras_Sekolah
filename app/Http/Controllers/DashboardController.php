@@ -16,6 +16,6 @@ class DashboardController extends Controller
         $barangRusakRingan = Sarpras::where('kondisi', 'rusak_ringan')->sum('jumlah');
         $barangRusakBerat = Sarpras::where('kondisi', 'rusak_berat')->sum('jumlah');
 
-        return view('dashboard', compact('totalBarang', 'barangBaik', 'barangRusakRingan', 'barangRusakBerat'));
+        return view('dashboard.dashboard', compact('totalBarang', 'barangBaik', 'barangRusakRingan', 'barangRusakBerat'));
     }
 }
