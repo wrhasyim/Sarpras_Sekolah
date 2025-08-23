@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SarprasController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LaporanController;
 // Tambahkan controller lain jika ada (UserController, LaporanController, etc)
 
 // Halaman Awal & Login
@@ -27,5 +28,12 @@ Route::middleware(['auth'])->group(function () {
         // Route untuk manajemen user, kelas, laporan, dll.
          Route::resource('users', UserController::class);
         // Route::get('/laporan', [LaporanController::class, 'index']);
+    });
+
+	// Rute untuk Admin dan TU <-- TAMBAHKAN GRUP BARU INI
+    Route::middleware(['role:admin,tu'])->group(function() {
+        Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
+        Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
     });
 });
