@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kelas; // <-- Ubah dari Sarpras ke Kelas
 use App\Models\Sarpras;
 use Illuminate\Http\Request;
 use App\Exports\SarprasExport;
@@ -31,8 +32,10 @@ class LaporanController extends Controller
      */
     public function exportPdf()
     {
-        $sarpras = Sarpras::with('kelas')->get();
-        $pdf = Pdf::loadView('laporan.pdf_view', ['sarpras' => $sarpras]);
-        return $pdf->download('laporan-sarpras.pdf');
+        // Ambil semua kelas yang memiliki sarpras, beserta data sarprasnya
+        $kelas = Kelas::whereHas('sarpras')->with('sarpras')->get();
+        
+        $pdf = Pdf::loadView('laporan.pdf_view', ['semua_kelas' => $kelas]);
+        return $pdf->download('laporan-inventaris-per-kelas.pdf');
     }
 }
