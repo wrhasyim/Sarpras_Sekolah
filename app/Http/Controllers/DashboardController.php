@@ -2,54 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kelas;
-use App\Models\Log;
 use App\Models\Sarpras;
 use App\Models\User;
+use App\Models\Kelas; // <-- TAMBAHKAN MODEL KELAS
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        // Data untuk kartu statistik
         $totalSarpras = Sarpras::count();
-        $totalLokasi = Kelas::count();
         $totalUser = User::count();
+        $totalLokasi = Kelas::count(); // <-- KEMBALIKAN PERHITUNGAN INI
 
-        // Data untuk Pie Chart Kondisi Barang
-        $kondisiCounts = Sarpras::select('kondisi', DB::raw('count(*) as total'))
-            ->groupBy('kondisi')
-            ->pluck('total', 'kondisi');
+        // Mengambil total dari setiap kolom kondisi secara terpisah
+        $kondisiCounts = [
+            'Baik' => Sarpras::sum('kondisi_baik'),
+            'Rusak Ringan' => Sarpras::sum('kondisi_rusak_ringan'),
+            'Rusak Berat' => Sarpras::sum('kondisi_rusak_berat'),
+        ];
 
-        $kondisiLabels = $kondisiCounts->keys();
-        $kondisiData = $kondisiCounts->values();
-
-        // Data untuk Bar Chart Top 5 Lokasi by Item Count
-        $lokasiCounts = Sarpras::select('kelas_id', DB::raw('sum(jumlah) as total_jumlah'))
-            ->groupBy('kelas_id')
-            ->orderBy('total_jumlah', 'desc')
-            ->take(5)
-            ->with('kelas')
-            ->get();
-
-        $lokasiLabels = $lokasiCounts->map(fn($item) => $item->kelas->nama_kelas);
-        $lokasiData = $lokasiCounts->pluck('total_jumlah');
-
-        // Data untuk tabel
         $sarprasTerbaru = Sarpras::with('kelas')->latest()->take(5)->get();
-        $logTerbaru = Log::with('user')->latest()->take(5)->get();
 
-        return view('dashboard.dashboard', compact(
-            'totalSarpras',
-            'totalLokasi',
-            'totalUser',
-            'kondisiLabels',
-            'kondisiData',
-            'lokasiLabels',
-            'lokasiData',
-            'sarprasTerbaru',
-            'logTerbaru'
-        ));
+        // Kirim semua variabel yang dibutuhkan oleh view
+        return view('dashboard.dashboard', compact('totalSarpras', 'totalUser', 'totalLokasi', 'kondisiCounts', 'sarprasTerbaru'));
     }
 }

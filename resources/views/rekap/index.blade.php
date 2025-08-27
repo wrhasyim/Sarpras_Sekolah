@@ -111,13 +111,13 @@
                                     <td>
                                         @if($rekapLalu)
                                             <span class="badge badge-{{ $diffBaik == 0 ? 'secondary' : ($diffBaik > 0 ? 'success' : 'danger') }}">
-                                                B: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
+                                                Baik: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
                                             </span>
                                             <span class="badge badge-{{ $diffRingan == 0 ? 'secondary' : ($diffRingan > 0 ? 'warning text-dark' : 'success') }}">
-                                                RR: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
+                                                Rusak Ringan: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
                                             </span>
                                             <span class="badge badge-{{ $diffBerat == 0 ? 'secondary' : ($diffBerat > 0 ? 'danger' : 'success') }}">
-                                                RB: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
+                                                Rusak Berat: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
                                             </span>
                                         @else
                                             <span class="badge badge-light text-dark">Data pembanding tidak ada</span>

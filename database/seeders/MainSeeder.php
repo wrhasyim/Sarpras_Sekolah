@@ -3,77 +3,82 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\Kelas;
+use App\Models\Sarpras;
 use Illuminate\Support\Facades\Hash;
 
 class MainSeeder extends Seeder
 {
-    public function run(): void
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
     {
-        // Buat Kelas
-        DB::table('kelas')->insert([
-            ['nama_kelas' => 'Kelas 10-A'],
-            ['nama_kelas' => 'Kelas 10-B'],
-            ['nama_kelas' => 'Kelas 11-A'],
-            ['nama_kelas' => 'Kelas 11-B'],
-            ['nama_kelas' => 'Ruang Guru'],
-            ['nama_kelas' => 'Perpustakaan'],
+        // Membuat Kelas
+        $kelas1 = Kelas::create(['nama_kelas' => '10-A']);
+        $kelas2 = Kelas::create(['nama_kelas' => '10-B']);
+        $kelas3 = Kelas::create(['nama_kelas' => '11-A']);
+        $kelas4 = Kelas::create(['nama_kelas' => '11-B']);
+        $kelas5 = Kelas::create(['nama_kelas' => 'Ruang Guru']);
+
+        // Membuat Users
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
 
-        // Buat Users
-        DB::table('users')->insert([
-            // Admin
-            [
-                'name' => 'Admin Utama',
-                'email' => 'admin@sarpras.com',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'kelas_id' => null,
-            ],
-            // Tata Usaha
-            [
-                'name' => 'Staf Tata Usaha',
-                'email' => 'tu@sarpras.com',
-                'password' => Hash::make('password'),
-                'role' => 'tu',
-                'kelas_id' => null,
-            ],
-            // Wali Kelas
-            [
-                'name' => 'Budi (Wali 10-A)',
-                'email' => 'walikelas@sarpras.com',
-                'password' => Hash::make('password'),
-                'role' => 'wali_kelas',
-                'kelas_id' => 1, // Wali Kelas 10-A
-            ],
+        User::create([
+            'name' => 'Tata Usaha',
+            'email' => 'tu@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'tu',
         ]);
-        
-        // Buat contoh Sarpras
-        DB::table('sarpras')->insert([
-            [
-                'kode_barang' => 'KRS-10A-001',
-                'nama_barang' => 'Kursi Siswa',
-                'jumlah' => 30,
-                'kondisi' => 'baik',
-                'kelas_id' => 1,
-                'keterangan' => 'Kursi kayu',
-            ],
-            [
-                'kode_barang' => 'MJA-10A-001',
-                'nama_barang' => 'Meja Siswa',
-                'jumlah' => 15,
-                'kondisi' => 'baik',
-                'kelas_id' => 1,
-                'keterangan' => 'Meja untuk 2 siswa',
-            ],
-            [
-                'kode_barang' => 'LMP-RG-001',
-                'nama_barang' => 'Lampu Neon',
-                'jumlah' => 4,
-                'kondisi' => 'rusak_ringan',
-                'kelas_id' => 5, // Ruang Guru
-                'keterangan' => 'Satu lampu berkedip',
-            ],
+
+        User::create([
+            'name' => 'Wali Kelas 10-A',
+            'email' => 'walikelas10a@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'wali_kelas',
+            'kelas_id' => $kelas1->id,
+        ]);
+
+        // === PERBAIKAN UTAMA DI BAGIAN SARPRAS ===
+        Sarpras::create([
+            'kode_barang' => 'KRS-10A-001',
+            'nama_barang' => 'Kursi Siswa',
+            'jumlah' => 30,
+            'kondisi_baik' => 28,
+            'kondisi_rusak_ringan' => 2,
+            'kondisi_rusak_berat' => 0,
+            'kelas_id' => $kelas1->id,
+            'keterangan' => 'Kursi kayu',
+        ]);
+
+        Sarpras::create([
+            'kode_barang' => 'MJA-10A-001',
+            'nama_barang' => 'Meja Siswa',
+            'jumlah' => 15,
+            'kondisi_baik' => 15,
+            'kondisi_rusak_ringan' => 0,
+            'kondisi_rusak_berat' => 0,
+            'kelas_id' => $kelas1->id,
+            'keterangan' => 'Meja untuk 2 siswa',
+        ]);
+
+        Sarpras::create([
+            'kode_barang' => 'LMP-RG-001',
+            'nama_barang' => 'Lampu Neon',
+            'jumlah' => 4,
+            'kondisi_baik' => 3,
+            'kondisi_rusak_ringan' => 1,
+            'kondisi_rusak_berat' => 0,
+            'kelas_id' => $kelas5->id,
+            'keterangan' => 'Satu lampu berkedip',
         ]);
     }
 }

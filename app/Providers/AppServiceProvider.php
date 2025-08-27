@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate; // <-- TAMBAHKAN BARIS INI
+use App\Models\User; // <-- TAMBAHKAN BARIS INI
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // PERBAIKAN KRITIS: Menambahkan kembali definisi Gate untuk hak akses
+        Gate::define('is_admin_or_tu', function (User $user) {
+            return in_array($user->role, ['admin', 'tu']);
+        });
     }
 }

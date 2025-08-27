@@ -4,6 +4,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Manajemen Sarana Prasarana</h1>
+        {{-- Tombol ini akan muncul jika Gate sudah diperbaiki --}}
         @can('is_admin_or_tu')
         <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Sarpras</a>
         @endcan
@@ -20,7 +21,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>No</th>
-                            <th>Kode Barang</th> {{-- <-- KOLOM BARU --}}
+                            <th>Kode Barang</th>
                             <th>Nama Barang</th>
                             <th>Lokasi</th>
                             <th>Jumlah</th>
@@ -33,8 +34,8 @@
                     <tbody>
                         @forelse($sarpras as $item)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $item->kode_barang }}</td> {{-- <-- DATA BARU --}}
+                            <td>{{ $loop->iteration + $sarpras->firstItem() - 1 }}</td>
+                            <td>{{ $item->kode_barang }}</td>
                             <td>{{ $item->nama_barang }}</td>
                             <td>{{ $item->kelas->nama_kelas ?? 'Belum dialokasikan' }}</td>
                             <td>{{ $item->jumlah }}</td>
@@ -42,12 +43,13 @@
                             <td>{{ $item->kondisi_rusak_ringan }}</td>
                             <td>{{ $item->kondisi_rusak_berat }}</td>
                             <td>
+                                {{-- Kolom Aksi ini akan muncul jika Gate sudah diperbaiki --}}
                                 @can('is_admin_or_tu')
-                                    <a href="{{ route('sarpras.edit', $item->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="{{ route('sarpras.edit', $item->id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
                                     <form action="{{ route('sarpras.destroy', $item->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin ingin menghapus data ini?')">Hapus</button>
+                                        <button type="submit" class="btn btn-sm btn-danger mb-1" onclick="return confirm('Anda yakin ingin menghapus data ini?')">Hapus</button>
                                     </form>
                                 @else
                                     -
@@ -61,7 +63,9 @@
                         @endforelse
                     </tbody>
                 </table>
-                {{ $sarpras->links() }}
+                <div class="d-flex justify-content-center">
+                    {{ $sarpras->links() }}
+                </div>
             </div>
         </div>
     </div>
