@@ -7,6 +7,7 @@ use App\Http\Controllers\SarprasController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\RekapController;
 // Tambahkan controller lain jika ada (UserController, LaporanController, etc)
 
 // Halaman Awal & Login
@@ -18,6 +19,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Rekap Sarpras
+    Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+    Route::get('/rekap/create', [RekapController::class, 'create'])->name('rekap.create');
+    Route::post('/rekap', [RekapController::class, 'store'])->name('rekap.store');
 
     // Sarpras (bisa diakses oleh semua role dengan batasan di controller)
    Route::resource('sarpras', SarprasController::class)->except(['show'])->parameters([

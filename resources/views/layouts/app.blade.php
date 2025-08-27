@@ -46,6 +46,11 @@
                         <i class="bi bi-file-earmark-text"></i> Laporan
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('rekap.index') }}" class="nav-link text-white {{ request()->is('rekap*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-check"></i> Rekap Bulanan
+                    </a>
+                </li>
                 @endif
             </ul>
             <hr>
