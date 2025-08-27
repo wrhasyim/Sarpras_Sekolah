@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\RekapBulanan;
-use App\Models\Sarpras;
+use App\Models\Sarpras; // Pastikan Sarpras di-import
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class RekapController extends Controller
@@ -28,9 +27,9 @@ class RekapController extends Controller
             $rekapsQuery->where('kelas_id', $filterKelas);
         }
 
-        $rekaps = $rekapsQuery->orderBy('kelas_id')->get()->groupBy('kelas.nama_kelas');
+        // Diubah untuk mengelompokkan berdasarkan nama kelas dengan benar
+        $rekaps = $rekapsQuery->get()->groupBy('kelas.nama_kelas');
 
-        // Data untuk perbandingan bulan sebelumnya
         $prevBulan = Carbon::create($filterTahun, $filterBulan)->subMonth();
         $rekapsSebelumnya = RekapBulanan::where('bulan', $prevBulan->month)
             ->where('tahun', $prevBulan->year)
@@ -48,49 +47,45 @@ class RekapController extends Controller
      * Menghasilkan rekap data untuk bulan dan tahun yang dipilih.
      */
     public function generate(Request $request)
-{
-    $request->validate([
-        'bulan' => 'required|integer|between:1,12',
-        'tahun' => 'required|integer|min:2020',
-    ]);
+    {
+        $request->validate([
+            'bulan' => 'required|integer|between:1,12',
+            'tahun' => 'required|integer|min:2020',
+        ]);
 
-    $bulan = $request->bulan;
-    $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        $tahun = $request->tahun;
 
-    // Ambil semua data sarpras saat ini
-    $currentSarpras = Sarpras::with('kelas')->whereNotNull('kelas_id')->get();
+        // Mengambil semua data dari model Sarpras, bukan variabel yang tidak terdefinisi
+        $currentSarpras = Sarpras::whereNotNull('kelas_id')->get();
 
-    if ($currentSarpras->isEmpty()) {
-        return back()->with('error', 'Tidak ada data sarpras yang bisa direkap.');
+        if ($currentSarpras->isEmpty()) {
+            return back()->with('error', 'Tidak ada data sarpras yang bisa direkap.');
+        }
+
+        $rekapData = [];
+        foreach ($currentSarpras as $sarpras) {
+            $rekapData[] = [
+                'sarpras_id' => $sarpras->id,
+                'kelas_id' => $sarpras->kelas_id,
+                'bulan' => $bulan,
+                'tahun' => $tahun,
+                'jumlah' => $sarpras->jumlah ?? 0,
+                'kondisi_baik' => $sarpras->kondisi_baik ?? 0,
+                'kondisi_rusak_ringan' => $sarpras->kondisi_rusak_ringan ?? 0,
+                'kondisi_rusak_berat' => $sarpras->kondisi_rusak_berat ?? 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        RekapBulanan::upsert(
+            $rekapData,
+            ['sarpras_id', 'kelas_id', 'bulan', 'tahun'],
+            ['jumlah', 'kondisi_baik', 'kondisi_rusak_ringan', 'kondisi_rusak_berat', 'updated_at']
+        );
+
+        return redirect()->route('rekap.index', ['bulan' => $bulan, 'tahun' => $tahun])
+                         ->with('success', "Rekap untuk bulan $bulan tahun $tahun berhasil dibuat/diperbarui.");
     }
-
-    $rekapData = [];
-    foreach ($currentSarpras as $sarpras) {
-        $rekapData[] = [
-            'sarpras_id' => $sarpras->id,
-            'kelas_id' => $sarpras->kelas_id,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            // ---- PERUBAHAN DI SINI ----
-            // Gunakan '?? 0' untuk memberikan nilai default 0 jika data asli adalah NULL
-            'jumlah' => $sarpras->jumlah ?? 0,
-            'kondisi_baik' => $sarpras->kondisi_baik ?? 0,
-            'kondisi_rusak_ringan' => $sarpras->kondisi_rusak_ringan ?? 0,
-            'kondisi_rusak_berat' => $sarpras->kondisi_rusak_berat ?? 0,
-            // ---- AKHIR PERUBAHAN ----
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-    }
-
-    // Gunakan `upsert` untuk memasukkan data baru atau memperbarui jika sudah ada
-    RekapBulanan::upsert(
-        $rekapData,
-        ['sarpras_id', 'kelas_id', 'bulan', 'tahun'], // Kolom unik untuk pengecekan
-        ['jumlah', 'kondisi_baik', 'kondisi_rusak_ringan', 'kondisi_rusak_berat', 'updated_at'] // Kolom yang di-update
-    );
-
-    return redirect()->route('rekap.index', ['bulan' => $bulan, 'tahun' => $tahun])
-                     ->with('success', "Rekap untuk bulan $bulan tahun $tahun berhasil dibuat/diperbarui.");
-}
 }

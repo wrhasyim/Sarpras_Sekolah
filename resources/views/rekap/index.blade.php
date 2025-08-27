@@ -127,7 +127,7 @@
                                                 R. Berat: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
                                             </span>
                                         @else
-                                            <span class="badge badge-light">Data bulan lalu tidak ada</span>
+                                            <span class="badge badge-dark">Data bulan lalu tidak ada</span>
                                         @endif
                                     </td>
                                 </tr>
