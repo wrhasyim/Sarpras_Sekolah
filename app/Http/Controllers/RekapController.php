@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\RekapBulanan;
-use App\Models\Sarpras; // Pastikan Sarpras di-import
+use App\Models\Sarpras; // PASTIKAN BARIS INI ADA DAN TIDAK DIHAPUS
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -27,7 +27,6 @@ class RekapController extends Controller
             $rekapsQuery->where('kelas_id', $filterKelas);
         }
 
-        // Diubah untuk mengelompokkan berdasarkan nama kelas dengan benar
         $rekaps = $rekapsQuery->get()->groupBy('kelas.nama_kelas');
 
         $prevBulan = Carbon::create($filterTahun, $filterBulan)->subMonth();
@@ -56,11 +55,11 @@ class RekapController extends Controller
         $bulan = $request->bulan;
         $tahun = $request->tahun;
 
-        // Mengambil semua data dari model Sarpras, bukan variabel yang tidak terdefinisi
+        // Kode ini akan berjalan dengan benar karena Sarpras sudah di-import
         $currentSarpras = Sarpras::whereNotNull('kelas_id')->get();
 
         if ($currentSarpras->isEmpty()) {
-            return back()->with('error', 'Tidak ada data sarpras yang bisa direkap.');
+            return back()->with('error', 'Tidak ada data sarpras yang bisa direkap. Pastikan sarpras sudah dialokasikan ke kelas.');
         }
 
         $rekapData = [];

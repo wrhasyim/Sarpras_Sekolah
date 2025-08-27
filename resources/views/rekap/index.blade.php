@@ -115,21 +115,23 @@
                                     <td>{{ $rekap->kondisi_rusak_ringan }}</td>
                                     <td>{{ $rekap->kondisi_rusak_berat }}</td>
                                     <td><strong>{{ $rekap->jumlah }}</strong></td>
-                                    <td>
-                                        @if($rekapLalu)
-                                            <span class="badge badge-{{ $diffBaik > 0 ? 'success' : ($diffBaik < 0 ? 'danger' : 'secondary') }}">
-                                                Baik: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
-                                            </span>
-                                            <span class="badge badge-{{ $diffRingan > 0 ? 'warning' : ($diffRingan < 0 ? 'success' : 'secondary') }}">
-                                                R. Ringan: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
-                                            </span>
-                                            <span class="badge badge-{{ $diffBerat > 0 ? 'danger' : ($diffBerat < 0 ? 'success' : 'secondary') }}">
-                                                R. Berat: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
-                                            </span>
-                                        @else
-                                            <span class="badge badge-dark">Data bulan lalu tidak ada</span>
-                                        @endif
-                                    </td>
+                                  <td>
+    @if($rekapLalu)
+        {{-- Jika tidak ada perubahan (0), gunakan badge dark agar terlihat --}}
+        <span class="badge badge-{{ $diffBaik == 0 ? 'dark' : ($diffBaik > 0 ? 'success' : 'danger') }}">
+            B: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
+        </span>
+        {{-- Tambahkan text-dark pada badge warning agar teks hitam terlihat --}}
+        <span class="badge badge-{{ $diffRingan == 0 ? 'dark' : ($diffRingan > 0 ? 'warning text-dark' : 'success') }}">
+            RR: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
+        </span>
+        <span class="badge badge-{{ $diffBerat == 0 ? 'dark' : ($diffBerat > 0 ? 'danger' : 'success') }}">
+            RB: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
+        </span>
+    @else
+        <span class="badge badge-secondary">Tidak ada data pembanding</span>
+    @endif
+</td>
                                 </tr>
                             @endforeach
                         </tbody>
