@@ -13,7 +13,6 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    {{-- Form Generate Rekap --}}
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Buat atau Perbarui Rekap Otomatis</h6>
@@ -23,26 +22,22 @@
             <form action="{{ route('rekap.generate') }}" method="POST" class="form-inline">
                 @csrf
                 <div class="form-group mr-2 mb-2">
-                    <label for="bulan_generate" class="sr-only">Bulan</label>
-                    <select name="bulan" id="bulan_generate" class="form-control" required>
+                    <select name="bulan" class="form-control" required>
                         @for ($i = 1; $i <= 12; $i++)
                             <option value="{{ $i }}" {{ date('m') == $i ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($i)->format('F') }}</option>
                         @endfor
                     </select>
                 </div>
                 <div class="form-group mr-2 mb-2">
-                    <label for="tahun_generate" class="sr-only">Tahun</label>
-                    <input type="number" name="tahun" id="tahun_generate" class="form-control" value="{{ date('Y') }}" min="2020" max="{{ date('Y') + 5 }}" required>
+                    <input type="number" name="tahun" class="form-control" value="{{ date('Y') }}" min="2020" required>
                 </div>
                 <button type="submit" class="btn btn-primary mb-2">
-                    <i class="bi bi-camera-fill"></i> Buat Rekap Bulan Ini
+                    <i class="bi bi-camera"></i> Buat Rekap
                 </button>
             </form>
         </div>
     </div>
 
-
-    {{-- Form Filter Tampilan --}}
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Tampilkan Rekap</h6>
@@ -79,8 +74,6 @@
         </div>
     </div>
 
-
-    {{-- Tabel Hasil Rekap --}}
     @forelse($rekaps as $namaKelas => $rekapPerKelas)
         <div class="card shadow mb-4">
             <div class="card-header">
@@ -92,10 +85,10 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>Barang</th>
-                                <th>Kondisi Baik</th>
-                                <th>Rusak Ringan</th>
-                                <th>Rusak Berat</th>
-                                <th>Jumlah Total</th>
+                                <th>Baik</th>
+                                <th>R. Ringan</th>
+                                <th>R. Berat</th>
+                                <th>Jumlah</th>
                                 <th>Perbandingan (vs {{ $prevBulan->format('F Y') }})</th>
                             </tr>
                         </thead>
@@ -103,7 +96,7 @@
                             @foreach($rekapPerKelas as $rekap)
                                 @php
                                     $key = $rekap->sarpras_id . '-' . $rekap->kelas_id;
-                                    $rekapLalu = $rekapsSebelumnya[$key] ?? null;
+                                    $rekapLalu = $rekapsSebelumnya->get($key);
 
                                     $diffBaik = $rekapLalu ? $rekap->kondisi_baik - $rekapLalu->kondisi_baik : 0;
                                     $diffRingan = $rekapLalu ? $rekap->kondisi_rusak_ringan - $rekapLalu->kondisi_rusak_ringan : 0;
@@ -115,23 +108,21 @@
                                     <td>{{ $rekap->kondisi_rusak_ringan }}</td>
                                     <td>{{ $rekap->kondisi_rusak_berat }}</td>
                                     <td><strong>{{ $rekap->jumlah }}</strong></td>
-                                  <td>
-    @if($rekapLalu)
-        {{-- Jika tidak ada perubahan (0), gunakan badge dark agar terlihat --}}
-        <span class="badge badge-{{ $diffBaik == 0 ? 'dark' : ($diffBaik > 0 ? 'success' : 'danger') }}">
-            B: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
-        </span>
-        {{-- Tambahkan text-dark pada badge warning agar teks hitam terlihat --}}
-        <span class="badge badge-{{ $diffRingan == 0 ? 'dark' : ($diffRingan > 0 ? 'warning text-dark' : 'success') }}">
-            RR: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
-        </span>
-        <span class="badge badge-{{ $diffBerat == 0 ? 'dark' : ($diffBerat > 0 ? 'danger' : 'success') }}">
-            RB: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
-        </span>
-    @else
-        <span class="badge badge-secondary">Tidak ada data pembanding</span>
-    @endif
-</td>
+                                    <td>
+                                        @if($rekapLalu)
+                                            <span class="badge badge-{{ $diffBaik == 0 ? 'secondary' : ($diffBaik > 0 ? 'success' : 'danger') }}">
+                                                B: {{ $diffBaik > 0 ? '+' : '' }}{{ $diffBaik }}
+                                            </span>
+                                            <span class="badge badge-{{ $diffRingan == 0 ? 'secondary' : ($diffRingan > 0 ? 'warning text-dark' : 'success') }}">
+                                                RR: {{ $diffRingan > 0 ? '+' : '' }}{{ $diffRingan }}
+                                            </span>
+                                            <span class="badge badge-{{ $diffBerat == 0 ? 'secondary' : ($diffBerat > 0 ? 'danger' : 'success') }}">
+                                                RB: {{ $diffBerat > 0 ? '+' : '' }}{{ $diffBerat }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-light text-dark">Data pembanding tidak ada</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -141,7 +132,7 @@
         </div>
     @empty
         <div class="alert alert-warning text-center">
-            Tidak ada data rekap untuk periode yang dipilih. Silakan coba buat rekap terlebih dahulu.
+            Tidak ada data rekap untuk periode yang dipilih. Coba buat rekap terlebih dahulu.
         </div>
     @endforelse
 </div>

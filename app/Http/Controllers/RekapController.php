@@ -4,15 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\RekapBulanan;
-use App\Models\Sarpras; // PASTIKAN BARIS INI ADA DAN TIDAK DIHAPUS
+use App\Models\Sarpras;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class RekapController extends Controller
 {
-    /**
-     * Menampilkan halaman utama rekap dengan filter.
-     */
     public function index(Request $request)
     {
         $filterBulan = $request->input('bulan', now()->month);
@@ -42,9 +39,6 @@ class RekapController extends Controller
         return view('rekap.index', compact('rekaps', 'rekapsSebelumnya', 'daftarKelas', 'filterBulan', 'filterTahun', 'filterKelas', 'prevBulan'));
     }
 
-    /**
-     * Menghasilkan rekap data untuk bulan dan tahun yang dipilih.
-     */
     public function generate(Request $request)
     {
         $request->validate([
@@ -55,7 +49,6 @@ class RekapController extends Controller
         $bulan = $request->bulan;
         $tahun = $request->tahun;
 
-        // Kode ini akan berjalan dengan benar karena Sarpras sudah di-import
         $currentSarpras = Sarpras::whereNotNull('kelas_id')->get();
 
         if ($currentSarpras->isEmpty()) {

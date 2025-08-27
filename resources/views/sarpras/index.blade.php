@@ -1,84 +1,69 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Data Sarana Prasarana
-        @if(Auth::user()->role == 'wali_kelas')
-            <small class="text-muted fs-5">- Kelas {{ Auth::user()->kelas->nama_kelas }}</small>
-        @endif
-    </h1>
-    <div>
-        @if(in_array(Auth::user()->role, ['admin', 'tu']))
-            <a href="{{ route('sarpras.import.form') }}" class="btn btn-info">Impor Data</a>
-            <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Data</a>
-        @elseif(Auth::user()->role == 'wali_kelas')
-            <a href="{{ route('sarpras.bulk.edit') }}" class="btn btn-primary">
-                <i class="bi bi-pencil-square"></i> Edit Inventaris Kelas
-            </a>
-        @endif
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Manajemen Sarana Prasarana</h1>
+        @can('is_admin_or_tu')
+        <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Sarpras</a>
+        @endcan
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>No</th>
+                            <th>Kode Barang</th> {{-- <-- KOLOM BARU --}}
+                            <th>Nama Barang</th>
+                            <th>Lokasi</th>
+                            <th>Jumlah</th>
+                            <th>Kondisi Baik</th>
+                            <th>Rusak Ringan</th>
+                            <th>Rusak Berat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($sarpras as $item)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $item->kode_barang }}</td> {{-- <-- DATA BARU --}}
+                            <td>{{ $item->nama_barang }}</td>
+                            <td>{{ $item->kelas->nama_kelas ?? 'Belum dialokasikan' }}</td>
+                            <td>{{ $item->jumlah }}</td>
+                            <td>{{ $item->kondisi_baik }}</td>
+                            <td>{{ $item->kondisi_rusak_ringan }}</td>
+                            <td>{{ $item->kondisi_rusak_berat }}</td>
+                            <td>
+                                @can('is_admin_or_tu')
+                                    <a href="{{ route('sarpras.edit', $item->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ route('sarpras.destroy', $item->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin ingin menghapus data ini?')">Hapus</button>
+                                    </form>
+                                @else
+                                    -
+                                @endcan
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="9" class="text-center">Tidak ada data sarpras.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                {{ $sarpras->links() }}
+            </div>
+        </div>
     </div>
 </div>
-
-@if(session('success'))
-    <div class="alert alert-success">
-        {{ session('success') }}
-    </div>
-@endif
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Kode Barang</th>
-            <th>Nama Barang</th>
-            <th>Jumlah</th>
-            <th>Kondisi</th>
-            <th>Lokasi (Kelas)</th>
-            <th>Aksi</th> {{-- <-- BAGIAN YANG DITAMBAHKAN --}}
-        </tr>
-    </thead>
-    <tbody>
-        @forelse($sarpras as $item)
-        <tr>
-            <td>{{ $item->kode_barang }}</td>
-            <td>{{ $item->nama_barang }}</td>
-            <td>{{ $item->jumlah }}</td>
-            <td>
-                <span class="badge 
-                    @if($item->kondisi == 'baik') bg-success 
-                    @elseif($item->kondisi == 'rusak_ringan') bg-warning 
-                    @else bg-danger @endif">
-                    {{ str_replace('_', ' ', $item->kondisi) }}
-                </span>
-            </td>
-            <td>{{ $item->kelas->nama_kelas }}</td>
-            
-            {{-- BAGIAN YANG DIPERBAIKI --}}
-            <td>
-                @if(in_array(Auth::user()->role, ['admin', 'tu']))
-                    <a href="{{ route('sarpras.edit', $item->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                @endif
-
-                @if(Auth::user()->role == 'admin')
-                    <form action="{{ route('sarpras.destroy', $item->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin hapus?')">Hapus</button>
-                    </form>
-                @endif
-                
-                @if(Auth::user()->role == 'wali_kelas')
-                    -
-                @endif
-            </td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="6" class="text-center">Tidak ada data.</td>
-        </tr>
-        @endforelse
-    </tbody>
-</table>
-
-{{ $sarpras->links() }}
-
 @endsection
