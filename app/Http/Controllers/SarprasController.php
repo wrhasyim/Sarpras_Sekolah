@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sarpras;
 use App\Models\Kelas;
+use App\Models\Sarpras;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator; // Impor Validator
+use App\Exports\SarprasExport;
+use App\Imports\SarprasImport;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Validator;
 
 class SarprasController extends Controller
 {
     /**
-     * Menampilkan daftar sarpras.
+     * Menampilkan daftar sarana prasarana.
      */
     public function index()
     {
-        $sarpras = Sarpras::with('kelas')->latest()->paginate(10);
+        $sarpras = Sarpras::with('kelas')->paginate(10);
         return view('sarpras.index', compact('sarpras'));
     }
 
     /**
-     * Menampilkan form untuk membuat sarpras baru.
+     * Menampilkan form untuk membuat data sarpras baru.
      */
     public function create()
     {
@@ -28,12 +32,13 @@ class SarprasController extends Controller
     }
 
     /**
-     * Menyimpan data sarpras baru beserta validasi jumlah.
+     * Menyimpan data sarpras baru ke database.
      */
     public function store(Request $request)
     {
         // Validasi input dasar
         $validator = Validator::make($request->all(), [
+            'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang',
             'nama_barang' => 'required|string|max:255',
             'jumlah' => 'required|integer|min:0',
             'kondisi_baik' => 'required|integer|min:0',
@@ -47,37 +52,22 @@ class SarprasController extends Controller
         }
 
         // Validasi kustom untuk memastikan jumlah total sesuai
-        $jumlah_total = (int) $request->input('jumlah');
-        $jumlah_kondisi = (int) $request->input('kondisi_baik') + (int) $request->input('kondisi_rusak_ringan') + (int) $request->input('kondisi_rusak_berat');
+        $validated = $validator->validated();
+        $total_kondisi = $validated['kondisi_baik'] + $validated['kondisi_rusak_ringan'] + $validated['kondisi_rusak_berat'];
 
-        if ($jumlah_kondisi !== $jumlah_total) {
-            $selisih = $jumlah_kondisi - $jumlah_total;
-            $pesan = '';
-            if ($selisih > 0) {
-                $pesan = "Jumlah total dari semua kondisi (baik, rusak ringan, rusak berat) adalah {$jumlah_kondisi}, yaitu kelebihan {$selisih} dari jumlah total barang ({$jumlah_total}).";
-            } else {
-                $selisih_abs = abs($selisih);
-                $pesan = "Jumlah total dari semua kondisi (baik, rusak ringan, rusak berat) adalah {$jumlah_kondisi}, yaitu kekurangan {$selisih_abs} dari jumlah total barang ({$jumlah_total}).";
-            }
-            // Kirim error kembali ke form
-            return redirect()->back()->withInput()->withErrors(['jumlah_total' => $pesan]);
+        if ($total_kondisi != $validated['jumlah']) {
+            return redirect()->back()
+                ->withErrors(['jumlah_total' => 'Jumlah total dari semua kondisi (baik, rusak ringan, rusak berat) harus sama dengan Jumlah Total sarpras.'])
+                ->withInput();
         }
 
-        Sarpras::create($request->all());
+        Sarpras::create($validated);
 
         return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil ditambahkan.');
     }
 
     /**
-     * Menampilkan detail sarpras.
-     */
-    public function show(Sarpras $sarpras)
-    {
-        return view('sarpras.show', compact('sarpras'));
-    }
-
-    /**
-     * Menampilkan form untuk mengedit sarpras.
+     * Menampilkan form untuk mengedit data sarpras.
      */
     public function edit(Sarpras $sarpras)
     {
@@ -86,53 +76,80 @@ class SarprasController extends Controller
     }
 
     /**
-     * Memperbarui data sarpras beserta validasi jumlah.
+     * Memperbarui data sarpras di database.
      */
     public function update(Request $request, Sarpras $sarpras)
     {
+        // Validasi input dasar
         $validator = Validator::make($request->all(), [
-        'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang',
-        'nama_barang' => 'required|string|max:255',
-        'jumlah' => 'required|integer|min:0',
-        'kondisi_baik' => 'required|integer|min:0',
-        'kondisi_rusak_ringan' => 'required|integer|min:0',
-        'kondisi_rusak_berat' => 'required|integer|min:0',
-        'kelas_id' => 'required|exists:kelas,id',
-    ]);
+            'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang,' . $sarpras->id,
+            'nama_barang' => 'required|string|max:255',
+            'jumlah' => 'required|integer|min:0',
+            'kondisi_baik' => 'required|integer|min:0',
+            'kondisi_rusak_ringan' => 'required|integer|min:0',
+            'kondisi_rusak_berat' => 'required|integer|min:0',
+            'kelas_id' => 'required|exists:kelas,id',
+        ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Validasi kustom untuk memastikan jumlah total sesuai
-        $jumlah_total = (int) $request->input('jumlah');
-        $jumlah_kondisi = (int) $request->input('kondisi_baik') + (int) $request->input('kondisi_rusak_ringan') + (int) $request->input('kondisi_rusak_berat');
+        // Validasi kustom untuk jumlah
+        $validated = $validator->validated();
+        $total_kondisi = $validated['kondisi_baik'] + $validated['kondisi_rusak_ringan'] + $validated['kondisi_rusak_berat'];
 
-        if ($jumlah_kondisi !== $jumlah_total) {
-            $selisih = $jumlah_kondisi - $jumlah_total;
-            $pesan = '';
-            if ($selisih > 0) {
-                $pesan = "Jumlah total dari semua kondisi (baik, rusak ringan, rusak berat) adalah {$jumlah_kondisi}, yaitu kelebihan {$selisih} dari jumlah total barang ({$jumlah_total}).";
-            } else {
-                $selisih_abs = abs($selisih);
-                $pesan = "Jumlah total dari semua kondisi (baik, rusak ringan, rusak berat) adalah {$jumlah_kondisi}, yaitu kekurangan {$selisih_abs} dari jumlah total barang ({$jumlah_total}).";
-            }
-            // Kirim error kembali ke form
-            return redirect()->back()->withInput()->withErrors(['jumlah_total' => $pesan]);
+        if ($total_kondisi != $validated['jumlah']) {
+            return redirect()->back()
+                ->withErrors(['jumlah_total' => 'Jumlah total dari semua kondisi harus sama dengan Jumlah Total sarpras.'])
+                ->withInput();
         }
-        
-        $sarpras->update($request->all());
+
+        $sarpras->update($validated);
 
         return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil diperbarui.');
     }
 
-
     /**
-     * Menghapus data sarpras.
+     * Menghapus data sarpras dari database.
      */
     public function destroy(Sarpras $sarpras)
     {
         $sarpras->delete();
         return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil dihapus.');
+    }
+
+    /**
+     * Menangani ekspor data sarpras ke file Excel.
+     */
+    public function export()
+    {
+        return Excel::download(new SarprasExport, 'sarpras.xlsx');
+    }
+
+    /**
+     * Menampilkan form untuk impor data.
+     */
+    public function showImportForm()
+    {
+        return view('sarpras.import');
+    }
+
+    /**
+     * Menangani impor data sarpras dari file Excel.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new SarprasImport, $request->file('file'));
+            return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil diimpor.');
+        } catch (\Exception $e) {
+            Log::error('Import Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengimpor data: ' . $e->getMessage());
+        }
     }
 }

@@ -7,7 +7,6 @@
         <div>
             @can('is_admin_or_tu')
             <a href="{{ route('sarpras.import.form') }}" class="btn btn-success">Import</a>
-            <a href="{{ route('sarpras.export') }}" class="btn btn-info">Export</a>
             <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Sarpras</a>
             @endcan
         </div>
