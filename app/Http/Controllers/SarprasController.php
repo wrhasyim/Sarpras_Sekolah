@@ -36,7 +36,6 @@ class SarprasController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input dasar
         $validator = Validator::make($request->all(), [
             'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang',
             'nama_barang' => 'required|string|max:255',
@@ -51,7 +50,6 @@ class SarprasController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Validasi kustom untuk memastikan jumlah total sesuai
         $validated = $validator->validated();
         $total_kondisi = $validated['kondisi_baik'] + $validated['kondisi_rusak_ringan'] + $validated['kondisi_rusak_berat'];
 
@@ -80,7 +78,6 @@ class SarprasController extends Controller
      */
     public function update(Request $request, Sarpras $sarpras)
     {
-        // Validasi input dasar
         $validator = Validator::make($request->all(), [
             'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang,' . $sarpras->id,
             'nama_barang' => 'required|string|max:255',
@@ -95,7 +92,6 @@ class SarprasController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Validasi kustom untuk jumlah
         $validated = $validator->validated();
         $total_kondisi = $validated['kondisi_baik'] + $validated['kondisi_rusak_ringan'] + $validated['kondisi_rusak_berat'];
 
@@ -140,16 +136,23 @@ class SarprasController extends Controller
      */
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls',
-        ]);
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
 
         try {
             Excel::import(new SarprasImport, $request->file('file'));
             return redirect()->route('sarpras.index')->with('success', 'Data sarpras berhasil diimpor.');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                // Kumpulkan pesan error untuk setiap baris yang gagal
+                $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            // Kembalikan ke halaman sebelumnya dengan pesan error yang jelas
+            return redirect()->back()->with('error', '<b>Terjadi kesalahan validasi saat impor:</b><br>' . implode('<br>', $errorMessages));
         } catch (\Exception $e) {
             Log::error('Import Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengimpor data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan umum saat mengimpor data. Silakan periksa file Anda atau hubungi administrator.');
         }
     }
 }
