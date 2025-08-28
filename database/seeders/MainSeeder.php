@@ -18,11 +18,19 @@ class MainSeeder extends Seeder
     public function run()
     {
         // Membuat Kelas
-        $kelas1 = Kelas::create(['nama_kelas' => '10-A']);
-        $kelas2 = Kelas::create(['nama_kelas' => '10-B']);
-        $kelas3 = Kelas::create(['nama_kelas' => '11-A']);
-        $kelas4 = Kelas::create(['nama_kelas' => '11-B']);
-        $kelas5 = Kelas::create(['nama_kelas' => 'Ruang Guru']);
+        $kelas1 = Kelas::create(['nama_kelas' => 'Ruang A3']);
+       $kelas2 = Kelas::create(['nama_kelas' => 'Ruang A4']);
+       $kelas3 = Kelas::create(['nama_kelas' => 'Ruang A7']);
+       $kelas4 = Kelas::create(['nama_kelas' => 'Ruang A8']);
+       $kelas5 = Kelas::create(['nama_kelas' => 'Ruang A13']);
+       $kelas6 = Kelas::create(['nama_kelas' => 'Ruang A14']);
+       $kelas7 = Kelas::create(['nama_kelas' => 'Ruang B1']);
+       $kelas8 = Kelas::create(['nama_kelas' => 'Ruang B2']);
+       $kelas9 = Kelas::create(['nama_kelas' => 'Ruang B4']);
+       $kelas10 = Kelas::create(['nama_kelas' => 'Ruang B5']);
+       $kelas11 = Kelas::create(['nama_kelas' => 'Ruang B7']);
+       $kelas12 = Kelas::create(['nama_kelas' => 'Ruang B8']);
+       $kelas13 = Kelas::create(['nama_kelas' => 'Ruang B10']);
 
         // Membuat Users
         User::create([
@@ -39,46 +47,6 @@ class MainSeeder extends Seeder
             'role' => 'tu',
         ]);
 
-        User::create([
-            'name' => 'Wali Kelas 10-A',
-            'email' => 'walikelas10a@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'wali_kelas',
-            'kelas_id' => $kelas1->id,
-        ]);
-
-        // === PERBAIKAN UTAMA DI BAGIAN SARPRAS ===
-        Sarpras::create([
-            'kode_barang' => 'KRS-10A-001',
-            'nama_barang' => 'Kursi Siswa',
-            'jumlah' => 30,
-            'kondisi_baik' => 28,
-            'kondisi_rusak_ringan' => 2,
-            'kondisi_rusak_berat' => 0,
-            'kelas_id' => $kelas1->id,
-            'keterangan' => 'Kursi kayu',
-        ]);
-
-        Sarpras::create([
-            'kode_barang' => 'MJA-10A-001',
-            'nama_barang' => 'Meja Siswa',
-            'jumlah' => 15,
-            'kondisi_baik' => 15,
-            'kondisi_rusak_ringan' => 0,
-            'kondisi_rusak_berat' => 0,
-            'kelas_id' => $kelas1->id,
-            'keterangan' => 'Meja untuk 2 siswa',
-        ]);
-
-        Sarpras::create([
-            'kode_barang' => 'LMP-RG-001',
-            'nama_barang' => 'Lampu Neon',
-            'jumlah' => 4,
-            'kondisi_baik' => 3,
-            'kondisi_rusak_ringan' => 1,
-            'kondisi_rusak_berat' => 0,
-            'kelas_id' => $kelas5->id,
-            'keterangan' => 'Satu lampu berkedip',
-        ]);
+       
     }
 }
