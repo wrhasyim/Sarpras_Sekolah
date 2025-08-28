@@ -8,6 +8,10 @@
         th, td { border: 1px solid #000; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
         h2, h3 { text-align: center; }
+        /* Tambahkan style untuk page-break-before */
+        .page-break {
+            page-break-before: always;
+        }
     </style>
 </head>
 <body>
@@ -18,7 +22,6 @@
                 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
                 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
             ];
-            // Mengakses bulan dan tahun dari dalam array $data
             $bulan = $bulanNama[$data['latestRekap']->bulan];
             $tahun = $data['latestRekap']->tahun;
         @endphp
@@ -29,8 +32,11 @@
         <h3>Data Rekap Belum Tersedia</h3>
     @endif
 
-    @foreach($data['kelasData'] as $kelas)
-        <h4>Kelas: {{ $kelas->nama_kelas }}</h4>
+    @foreach($data['kelasData'] as $index => $kelas)
+        {{-- Jangan tambahkan page-break untuk item pertama --}}
+        <h4 @if($index > 0) class="page-break" @endif>
+            Kelas: {{ $kelas->nama_kelas }}
+        </h4>
         <table>
             <thead>
                 <tr>
