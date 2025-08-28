@@ -3,73 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
-use App\Models\RekapBulanan; // Import model RekapBulanan
-use Illuminate\Http\Request;
-use App\Exports\SarprasExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\RekapBulanan;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon; // Import Carbon untuk manipulasi tanggal
+use Illuminate\Http\Request;
 
 class LaporanController extends Controller
 {
-    /**
-     * Menampilkan halaman utama untuk menu laporan.
-     */
     public function index()
     {
-        return view('laporan.index');
-    }
-
-    /**
-     * Menghasilkan dan mengunduh laporan dalam format Excel.
-     */
-    public function exportExcel()
-    {
-        return Excel::download(new SarprasExport, 'laporan-sarpras.xlsx');
-    }
-
-    /**
-     * Menghasilkan dan mengunduh laporan dalam format PDF dengan perbandingan.
-     */
-    public function exportPdf()
-    {
-        // Mengambil rekap terbaru sebagai dasar laporan
         $latestRekap = RekapBulanan::orderBy('tahun', 'desc')->orderBy('bulan', 'desc')->first();
+        $kelasData = Kelas::with('sarpras')->has('sarpras')->get();
+        $selectedRekap = null;
 
-        if (!$latestRekap) {
-            // Jika tidak ada rekap, buat PDF dari data sarpras saat ini tanpa perbandingan
-            $kelas = Kelas::whereHas('sarpras')->with('sarpras')->get();
-            $pdf = Pdf::loadView('laporan.pdf_view_basic', ['semua_kelas' => $kelas]);
-            return $pdf->download('laporan-inventaris-saat-ini.pdf');
+        if ($latestRekap) {
+            $rekapBulan = RekapBulanan::where('bulan', $latestRekap->bulan)
+                ->where('tahun', $latestRekap->tahun)
+                ->get();
+
+            $selectedRekap = $rekapBulan->mapWithKeys(function ($item) {
+                return [$item->sarpras_id => $item];
+            });
         }
 
-        $filterBulan = $latestRekap->bulan;
-        $filterTahun = $latestRekap->tahun;
+        return view('laporan.index', compact('kelasData', 'latestRekap', 'selectedRekap'));
+    }
 
-        // Mengambil data rekap untuk bulan dan tahun terpilih
-        $rekaps = RekapBulanan::with(['sarpras', 'kelas'])
-            ->where('bulan', $filterBulan)
-            ->where('tahun', $filterTahun)
-            ->get()
-            ->groupBy('kelas.nama_kelas');
+    public function exportPdf()
+    {
+        $latestRekap = RekapBulanan::orderBy('tahun', 'desc')->orderBy('bulan', 'desc')->first();
+        $kelasData = Kelas::with('sarpras')->has('sarpras')->get();
+        $selectedRekap = null;
 
-        // Mengambil data rekap bulan sebelumnya untuk perbandingan
-        $prevBulan = Carbon::create($filterTahun, $filterBulan)->subMonth();
-        $rekapsSebelumnya = RekapBulanan::where('bulan', $prevBulan->month)
-            ->where('tahun', $prevBulan->year)
-            ->get()
-            ->keyBy(function ($item) {
-                return $item->sarpras_id . '-' . $item->kelas_id;
+        if ($latestRekap) {
+            $rekapBulan = RekapBulanan::where('bulan', $latestRekap->bulan)
+                ->where('tahun', $latestRekap->tahun)
+                ->get();
+
+            $selectedRekap = $rekapBulan->mapWithKeys(function ($item) {
+                return [$item->sarpras_id => $item];
             });
+        }
 
-        $pdf = Pdf::loadView('laporan.pdf_view', [
-            'rekaps' => $rekaps,
-            'rekapsSebelumnya' => $rekapsSebelumnya,
-            'bulan' => $filterBulan,
-            'tahun' => $filterTahun,
-            'prevBulan' => $prevBulan,
-        ]);
+        $data = [
+            'kelasData' => $kelasData,
+            'latestRekap' => $latestRekap,
+            'selectedRekap' => $selectedRekap
+        ];
 
-        return $pdf->download('laporan-perbandingan-inventaris-' . $filterBulan . '-' . $filterTahun . '.pdf');
+        // Diubah dari 'laporan.pdf_view_basic' menjadi 'laporan.pdf_view'
+        $pdf = Pdf::loadView('laporan.pdf_view', compact('data'));
+
+        return $pdf->download('laporan-sarpras.pdf');
     }
 }
