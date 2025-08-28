@@ -4,10 +4,13 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Manajemen Sarana Prasarana</h1>
-        {{-- Tombol ini akan muncul jika Gate sudah diperbaiki --}}
-        @can('is_admin_or_tu')
-        <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Sarpras</a>
-        @endcan
+        <div>
+            @can('is_admin_or_tu')
+            <a href="{{ route('sarpras.import.form') }}" class="btn btn-success">Import</a>
+            <a href="{{ route('sarpras.export') }}" class="btn btn-info">Export</a>
+            <a href="{{ route('sarpras.create') }}" class="btn btn-primary">Tambah Sarpras</a>
+            @endcan
+        </div>
     </div>
 
     @if(session('success'))
@@ -43,7 +46,6 @@
                             <td>{{ $item->kondisi_rusak_ringan }}</td>
                             <td>{{ $item->kondisi_rusak_berat }}</td>
                             <td>
-                                {{-- Kolom Aksi ini akan muncul jika Gate sudah diperbaiki --}}
                                 @can('is_admin_or_tu')
                                     <a href="{{ route('sarpras.edit', $item->id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
                                     <form action="{{ route('sarpras.destroy', $item->id) }}" method="POST" class="d-inline">

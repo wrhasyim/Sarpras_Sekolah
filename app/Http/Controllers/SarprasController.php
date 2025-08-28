@@ -90,15 +90,15 @@ class SarprasController extends Controller
      */
     public function update(Request $request, Sarpras $sarpras)
     {
-        // Validasi input dasar
         $validator = Validator::make($request->all(), [
-            'nama_barang' => 'required|string|max:255',
-            'jumlah' => 'required|integer|min:0',
-            'kondisi_baik' => 'required|integer|min:0',
-            'kondisi_rusak_ringan' => 'required|integer|min:0',
-            'kondisi_rusak_berat' => 'required|integer|min:0',
-            'kelas_id' => 'required|exists:kelas,id',
-        ]);
+        'kode_barang' => 'required|string|max:255|unique:sarpras,kode_barang',
+        'nama_barang' => 'required|string|max:255',
+        'jumlah' => 'required|integer|min:0',
+        'kondisi_baik' => 'required|integer|min:0',
+        'kondisi_rusak_ringan' => 'required|integer|min:0',
+        'kondisi_rusak_berat' => 'required|integer|min:0',
+        'kelas_id' => 'required|exists:kelas,id',
+    ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
